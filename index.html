@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intelligent Travel Bot</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #edf5f1;
+  margin: 0;
+  padding: 25px;
+  color: #20352d;
+}
+.container {
+  max-width: 750px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #0001;
+}
+h1 { color: #176b5b; }
+label { display: block; margin-top: 14px; font-weight: bold; }
+input, select, button {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #b9cec2;
+  font-size: 15px;
+}
+button {
+  margin-top: 20px;
+  background: #176b5b;
+  color: white;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+}
+#result {
+  margin-top: 22px;
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>✈️ Intelligent Travel Bot</h1>
+<p>Plan your trip according to your interests and budget.</p>
+
+<label>Destination</label>
+<input id="place" placeholder="Enter any place, e.g. Hyderabad or Paris">
+
+<label>Total Budget (₹)</label>
+<input id="budget" type="number" value="15000" min="1">
+
+<label>Number of Days</label>
+<input id="days" type="number" value="3" min="1" max="30">
+
+<label>Your Interest</label>
+<select id="interest">
+<option>Culture and History</option>
+<option>Nature and Wildlife</option>
+<option>Food and Markets</option>
+<option>Beaches and Adventure</option>
+<option>Relaxation</option>
+</select>
+
+<label>Transportation</label>
+<select id="transport">
+<option value="Train">Train</option>
+<option value="Bus">Bus</option>
+<option value="Flight">Flight</option>
+<option value="Car">Car</option>
+</select>
+
+<label>Accommodation</label>
+<select id="stay">
+<option value="Budget">Budget</option>
+<option value="Standard">Standard</option>
+<option value="Premium">Premium</option>
+</select>
+
+<button onclick="generatePlan()">Generate My Travel Plan</button>
+<div id="result"></div>
+</div>
+
+<script>
+const knowledge = {
+  "Culture and History": [
+    "Explore historical landmarks",
+    "Visit a museum or heritage site",
+    "Explore local markets"
+  ],
+  "Nature and Wildlife": [
+    "Visit a park or nature area",
+    "Explore scenic surroundings",
+    "Enjoy an outdoor walk"
+  ],
+  "Food and Markets": [
+    "Try regional dishes",
+    "Explore local food markets",
+    "Visit a popular cafe"
+  ],
+  "Beaches and Adventure": [
+    "Explore a scenic outdoor location",
+    "Consider a suitable adventure activity",
+    "Visit a scenic viewpoint"
+  ],
+  "Relaxation": [
+    "Visit a peaceful place",
+    "Enjoy a relaxed cafe visit",
+    "Take an evening stroll"
+  ]
+};
+
+function generatePlan() {
+  const place = document.getElementById("place").value.trim();
+  const budget = Number(document.getElementById("budget").value);
+  const days = Number(document.getElementById("days").value);
+  const interest = document.getElementById("interest").value;
+  const transport = document.getElementById("transport").value;
+  const stay = document.getElementById("stay").value;
+  const result = document.getElementById("result");
+
+  if (!place || budget <= 0 || days < 1 ||
+      !Number.isInteger(days) || days > 30) {
+    result.textContent =
+      "Enter a destination, a positive budget, and 1–30 whole days.";
+    return;
+  }
+
+  // Knowledge representation: rules and cost estimates
+  const transportRate = {
+    Train: 0.15, Bus: 0.10, Flight: 0.35, Car: 0.25
+  };
+  const stayRate = {
+    Budget: 0.20, Standard: 0.35, Premium: 0.50
+  };
+
+  const transportCost = budget * transportRate[transport];
+  const stayCost = budget * stayRate[stay] * days / 3;
+  const foodCost = 500 * days;
+  const activityCost = 400 * days;
+  const localCost = 300 * days;
+
+  const total = transportCost + stayCost +
+                foodCost + activityCost + localCost;
+
+  let html = `<h2>Your Trip to ${escapeHTML(place)}</h2>`;
+  html += `<p><b>Duration:</b> ${days} days<br>`;
+  html += `<b>Interest:</b> ${escapeHTML(interest)}<br>`;
+  html += `<b>Transport:</b> ${transport}<br>`;
+  html += `<b>Accommodation:</b> ${stay}</p>`;
+  html += "<h3>Suggested Itinerary</h3>";
+
+  for (let i = 0; i < days; i++) {
+    const activity = knowledge[interest][i % knowledge[interest].length];
+    html += `<p><b>Day ${i + 1}:</b> ${activity}</p>`;
+  }
+
+  const money = n => "₹" + Math.round(n).toLocaleString("en-IN");
+
+  html += `<h3>Estimated Costs</h3>
+    Transport: ${money(transportCost)}<br>
+    Accommodation: ${money(stayCost)}<br>
+    Food: ${money(foodCost)}<br>
+    Activities: ${money(activityCost)}<br>
+    Local travel: ${money(localCost)}<hr>
+    <b>Total: ${money(total)}</b><br>
+    Budget: ${money(budget)}<br><br>`;
+
+  if (total <= budget) {
+    html += "✅ The estimated plan fits your budget.";
+  } else {
+    html += "⚠️ This estimate exceeds your budget. Try cheaper options.";
+  }
+
+  html += `<h3>AI Concepts Used</h3>
+    Knowledge representation, rule-based reasoning,
+    preference-based recommendations, and budget checking.
+    <p><small>Activities are general suggestions.
+    Costs are illustrative, not live travel prices.</small></p>`;
+
+  result.innerHTML = html;
+}
+
+function escapeHTML(text) {
+  return text.replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
+</script>
+</body>
+</html>
